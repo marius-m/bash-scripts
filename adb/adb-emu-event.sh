@@ -92,10 +92,15 @@
 # 83 -->  "KEYCODE_NOTIFICATION" 
 # 84 -->  "KEYCODE_SEARCH" 
 # 85 -->  "TAG_LAST_KEYCODE"
+#
+# Source: https://stackoverflow.com/questions/14772619/wake-up-android-with-use-adb-or-eclipse-just-before-debug
+# 
+# https://developer.android.com/reference/android/view/KeyEvent.html#KEYCODE_WAKEUP
+# 224 --> "KEYCODE_WAKEUP"
 
 INPUT_KEY=$1
 if [[ -z ${INPUT_KEY} ]] ; then
-    echo "./adb-emu-event.sh [back|menu|home]"
+    echo "./adb-emu-event.sh [back|menu|home|wake]"
     echo "Ex: ./adb-emu-event.sh back"
     exit 1
 fi
@@ -111,8 +116,16 @@ case $INPUT_KEY in
   back)
     INPUT_CODE=4
     ;;
+  wake)
+    INPUT_CODE=224
+    ;;
   *)
     INPUT_CODE=0
     ;;
 esac
+if [[ ${INPUT_CODE} -eq 0 ]] ; then
+    echo "Event not recognized"
+    echo "Ex: ./adb-emu-event.sh back"
+    exit 1
+fi
 adb shell input keyevent "${INPUT_CODE}"
