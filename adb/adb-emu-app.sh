@@ -59,7 +59,7 @@ fi
 
 INPUT_CODE=""
 case $INPUT_KEY in
-  settings)
+  display)
     INPUT_APP="android.settings.DISPLAY_SETTINGS"
     ;;
   wifi)

@@ -119,6 +119,9 @@ case $INPUT_KEY in
   wake)
     INPUT_CODE=224
     ;;
+  power)
+    INPUT_CODE=26
+    ;;
   *)
     INPUT_CODE=0
     ;;
