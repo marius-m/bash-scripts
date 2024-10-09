@@ -1,0 +1,3 @@
+#!/bin/bash
+## Source: https://stackoverflow.com/questions/7726949/remove-tracking-branches-no-longer-on-remote
+git fetch -p && for branch in $(git branch -vv | grep ': gone]' | awk '{print $1}'); do git branch -D $branch; done
