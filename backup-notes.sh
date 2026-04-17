@@ -4,25 +4,37 @@ OUTPUT_PATH=$2
 
 #set -x
 ## Sanity checks
-## Agument assert
+## Argument assert
 if [ $# -lt 2 ]; then
     echo "No arguments supplied"
     echo "Args: [input path] [output path]"
     exit 1;
 fi
 
+DATE=$(date)
+echo ""
+echo "**********************************************************************"
+echo "                    Initializing backup ($DATE)                       "
+echo " - From: '${INPUT_PATH}'"
+echo " - To: '${OUTPUT_PATH}'"
+echo "**********************************************************************"
+echo ""
+echo ""
 ## Paths asserts
 if [ ! -d ${INPUT_PATH} ]; then
   echo "Input directory doesnt exist. (${INPUT_PATH})"
   exit 1;
 fi
-if [ ! -d ${INPUT_PATH} ]; then
+if [ ! -d ${OUTPUT_PATH} ]; then
   echo "Output directory doesnt exist. (${OUTPUT_PATH})"
   exit 1;
 fi
 
+ESCAPED_INPUT=$(printf '%s' "${INPUT_PATH}" | sed 's/ /\\ /g')
+ESCAPED_OUTPUT=$(printf '%s' "${OUTPUT_PATH}" | sed 's/ /\\ /g')
+
 whoami
-cd ${INPUT_PATH}
+eval cd "${ESCAPED_INPUT}"
 echo "Inspecting path: '${INPUT_PATH}'"
 FILES_ORG_ALL=($(grep -rl --include="*.org" "" .))
 FILES_ORG_ALL_SIZE=${#FILES_ORG_ALL[@]}
@@ -31,7 +43,7 @@ FILES_ORG_ALL_SIZE=${#FILES_ORG_ALL[@]}
 echo "Finding :work: files.."
 FILES_ORG_WORK=($(grep -rl --include="*.org" ":work:" .))
 FILES_ORG_WORK_SIZE=${#FILES_ORG_WORK[@]}
-echo "Found ${FILES_ORG_WORK_SIZE} / ${FILES_ORG_ALL_SIZE} results"
+echo "Found work:${FILES_ORG_WORK_SIZE} / all:${FILES_ORG_ALL_SIZE} results"
 
 #echo "Writing 'exclude.txt' for :work: exclusions"
 #FILE_EXCLUDE=exclude.txt
@@ -41,7 +53,7 @@ echo "Found ${FILES_ORG_WORK_SIZE} / ${FILES_ORG_ALL_SIZE} results"
 ## Appending exclusion files
 echo "Gathering exclusion files.."
 FILE_EX=exclude.txt
-echo "" > $FILE_EX
+> $FILE_EX
 RSYNC_ARG_FILE_EXCLUDE=()
 for item in "${FILES_ORG_WORK[@]}"; do
     #ITEM_PATH_FULL=$(realpath $item)
@@ -50,7 +62,8 @@ for item in "${FILES_ORG_WORK[@]}"; do
     #RSYNC_ARG_FILE_EXCLUDE="$RSYNC_ARG_FILE_EXCLUDE --exclude='${ITEM_PATH_FULL}'"
     echo $ITEM_PATH_FULL >> $FILE_EX
 done
+echo "*.org_archive" >> $FILE_EX
 
-echo "Synchroning files.."
-rsync -avhru --progress --exclude-from=$FILE_EX --exclude=$FILE_EX . ${OUTPUT_PATH}
+echo "Synchroning files.. (from: '${INPUT_PATH}', to: '${OUTPUT_PATH}')"
+eval rsync -avhru --progress --exclude-from=$FILE_EX --exclude=$FILE_EX "${ESCAPED_INPUT}" "${ESCAPED_OUTPUT}"
 echo "Done."

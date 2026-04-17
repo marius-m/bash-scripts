@@ -9,5 +9,10 @@ fi
 
 echo "Converting: $FILE"
 pandoc -f markdown-auto_identifiers -t org --wrap=none -o "${FILE}.org" "${FILE}"
+
 echo "Renaming to: $NEW_NAME"
 mv "${FILE}.org" "${NEW_NAME}"
+
+echo "Copying to clipboard..."
+cat "${NEW_NAME}" | pbcopy
+echo "Done. Org content copied to clipboard."

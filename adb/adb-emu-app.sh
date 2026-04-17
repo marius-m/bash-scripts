@@ -1,5 +1,4 @@
 #!/bin/bash
-
 ## Source: https://stackoverflow.com/questions/14432706/adb-command-to-open-settings-and-change-them
 # usage: input [text|keyevent]
 # input text <string>
@@ -50,12 +49,37 @@
 # android.search.action.SEARCH_SETTINGS
 # android.search.action.WEB_SEARCH_SETTINGS
 
-INPUT_KEY=$1
-if [[ -z ${INPUT_KEY} ]] ; then
-    echo "./adb-emu-app.sh [settings]"
-    echo "Ex: ./adb-emu-app.sh settings"
+INPUT=$1
+if [[ -z ${INPUT} ]] ; then
+    echo "./adb-emu-app.sh --device [emulator-5554] --app [system, display, wifi]"
+    echo "Ex: ./adb-emu-app.sh system"
     exit 1
 fi
+
+## Reading ADB devices to provide first available device
+ARR_DEVICES=()
+adb devices | while read -r line
+do
+  if [ ! "$line" = "" ] && [ "$(echo "$line" | awk '{print $2}')" = "device" ]
+  then
+    device=$(echo "$line" | awk '{print $1}')
+    echo "Device ${device}"
+    ARR_DEVICES+=($device)
+  fi
+done
+echo "Available devices: ${ARR_DEVICES[*]}"
+
+## Reading named arguments and mapping to respective variables as override values
+while [ $# -gt 0 ]; do
+    if [[ $1 == "--"* ]]; then
+        v="${1/--/}"
+        declare "$v"="$2"
+        shift
+    fi
+    shift
+done
+INPUT_DEVICE=$device
+INPUT_KEY=$app
 
 INPUT_CODE=""
 case $INPUT_KEY in
@@ -72,9 +96,4 @@ case $INPUT_KEY in
     INPUT_APP=""
     ;;
 esac
-if [[ -z ${INPUT_APP} ]] ; then
-    echo "Invall app name"
-    echo "Ex: ./adb-emu-app.sh settings"
-    exit 1
-fi
-adb shell am start -a $INPUT_APP
+adb -s $INPUT_DEVICE shell am start -a $INPUT_APP
