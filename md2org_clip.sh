@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/zsh
 FILE=$1
 NEW_NAME=$(echo "$1" | sed 's/\.md$/.org/')
 
@@ -14,5 +14,5 @@ echo "Renaming to: $NEW_NAME"
 mv "${FILE}.org" "${NEW_NAME}"
 
 echo "Copying to clipboard..."
-cat "${NEW_NAME}" | pbcopy
+cat "${NEW_NAME}" | pbc
 echo "Done. Org content copied to clipboard."
