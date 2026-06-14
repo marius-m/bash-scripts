@@ -62,8 +62,8 @@ TMUX_GRUVBOX_PLUGIN="$HOME/.config/tmux/plugins/tmux-gruvbox/gruvbox-tpm.tmux"
 
 # --- Rofi ---
 ROFI_CONFIG="$HOME/.config/rofi/config.rasi"
-LIGHT_ROFI="/usr/share/rofi/themes/gruvbox-light.rasi"
-DARK_ROFI="/usr/share/rofi/themes/gruvbox-dark.rasi"
+LIGHT_ROFI="$HOME/.config/rofi/gruvbox-material-light.rasi"
+DARK_ROFI="$HOME/.config/rofi/gruvbox-material-dark.rasi"
 
 # --- Timer helper ---
 __start_ms() { __t=$(date +%s%3N); }
