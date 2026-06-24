@@ -3,7 +3,6 @@
 export LANG=en_US.UTF-8
 
 I_FILE=$1
-ARG_OVERWRITE=$2
 I_OVERWRITE=0
 ORIG_FILE="$I_FILE"
 FILENAME=$(basename -- "$I_FILE")
@@ -12,12 +11,63 @@ FILENAME="${FILENAME%.*}"
 O_EXT="png"
 I_EXT_LC=$(echo "$I_EXT" | tr '[:upper:]' '[:lower:]')
 
+# Supported resolutions (16:9): width -> height
+# 640x360, 800x450, 1024x576, 1280x720, 1366x768, 1600x900, 1920x1080, 2560x1440, 3840x2160
+VALID_WIDTHS="640 800 1024 1280 1366 1600 1920 2560 3840"
+
+resolution_height() {
+  case "$1" in
+    640)  echo 360  ;;
+    800)  echo 450  ;;
+    1024) echo 576  ;;
+    1280) echo 720  ;;
+    1366) echo 768  ;;
+    1600) echo 900  ;;
+    1920) echo 1080 ;;
+    2560) echo 1440 ;;
+    3840) echo 2160 ;;
+    *)    echo ""   ;;
+  esac
+}
+
+TARGET_WIDTH="1024"
+
+# Parse optional flags (--overwrite, --resolution <width>)
+shift
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --overwrite)
+      I_OVERWRITE=1
+      shift ;;
+    --res)
+      if [ -z "$2" ]; then
+        echo "Error: --res requires a width value."
+        echo "  Valid widths: ${VALID_WIDTHS}"
+        exit 1
+      fi
+      TARGET_WIDTH="$2"
+      shift 2 ;;
+    *)
+      echo "Error: Unknown argument '$1'."
+      echo "Usage: ./scale-down.sh input_image.png [--res <width>] [--overwrite]"
+      echo "  Valid widths: ${VALID_WIDTHS}"
+      exit 1 ;;
+  esac
+done
+
+TARGET_HEIGHT=$(resolution_height "$TARGET_WIDTH")
+if [ -z "$TARGET_HEIGHT" ]; then
+  echo "Error: Unsupported resolution width '${TARGET_WIDTH}'."
+  echo "  Valid widths: ${VALID_WIDTHS}"
+  exit 1
+fi
+
 SUPPORTED_EXTS="png jpg jpeg gif bmp tiff tif webp"
 
 if [ ! -f "$I_FILE" ]; then
   echo "File not found (${I_FILE})!"
-  echo "Usage: ./scale-down.sh input_image.png"
-  echo "Usage: ./scale-down.sh input_image.png --overwrite"
+  echo "Usage: ./scale-down.sh input_image.png [--res <width>] [--overwrite]"
+  echo "  Valid widths: ${VALID_WIDTHS}"
   exit 1
 fi
 
@@ -35,18 +85,11 @@ if [ "$SUPPORTED" = 0 ]; then
   exit 1
 fi
 
-O_FILE=$(echo "$1" | sed "s/\.${I_EXT}$/-small.${O_EXT}/")
+O_FILE=$(echo "$ORIG_FILE" | sed "s/\.${I_EXT}$/-small.${O_EXT}/")
 if [ "$I_FILE" = "$O_FILE" ]; then
   echo "Same name used for output (${I_FILE})!"
   exit 1
 fi
-
-if [ "$ARG_OVERWRITE" = "--overwrite" ]; then
-  I_OVERWRITE=1
-fi
-
-TARGET_WIDTH="1024"
-TARGET_HEIGHT="768"
 
 # Check if ImageMagick is installed
 if ! command -v convert > /dev/null 2>&1; then
