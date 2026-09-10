@@ -17,14 +17,16 @@ pgrep -x "rclone" >/dev/null && exit 0
 EXIT_CODE=$?
 
 if [ "$EXIT_CODE" -ne 0 ]; then
-    terminal-notifier \
+    /opt/homebrew/bin/terminal-notifier \
         -title "rclone bisync" \
         -message "Sync failed (exit $EXIT_CODE). Check ~/rclone.log" \
         -sound Glass \
-        -group rclone-bisync
+        -group rclone-bisync \
+        -sender com.apple.Terminal
 else
-    terminal-notifier \
+    /opt/homebrew/bin/terminal-notifier \
         -title "rclone bisync" \
         -message "Sync completed successfully." \
-        -group rclone-bisync
+        -group rclone-bisync \
+        -sender com.apple.Terminal
 fi
