@@ -8,6 +8,7 @@ SKIP_TERMINAL=false
 SKIP_EMACS=false
 SKIP_TMUX=false
 SKIP_ROFI=false
+SKIP_OPENCODE=false
 for arg in "$@"; do
     case "$arg" in
         dark|light) MODE_ARG="$arg" ;;
@@ -18,6 +19,7 @@ for arg in "$@"; do
         --no-emacs) SKIP_EMACS=true ;;
         --no-tmux) SKIP_TMUX=true ;;
         --no-rofi) SKIP_ROFI=true ;;
+        --no-opencode) SKIP_OPENCODE=true ;;
         *) echo "Unknown argument: $arg"; exit 1 ;;
     esac
 done
@@ -64,6 +66,11 @@ TMUX_GRUVBOX_PLUGIN="$HOME/.config/tmux/plugins/tmux-gruvbox/gruvbox-tpm.tmux"
 ROFI_CONFIG="$HOME/.config/rofi/config.rasi"
 LIGHT_ROFI="$HOME/.config/rofi/gruvbox-material-light.rasi"
 DARK_ROFI="$HOME/.config/rofi/gruvbox-material-dark.rasi"
+
+# --- OpenCode ---
+OPENCODE_THEME_FILE="$HOME/.config/opencode/themes/gruvbox.json"
+LIGHT_OPENCODE_THEME_SRC="$HOME/Projects/personal/cfg-opencode/themes/gruvbox-light.json"
+DARK_OPENCODE_THEME_SRC="$HOME/Projects/personal/cfg-opencode/themes/gruvbox-dark.json"
 
 # --- Timer helper ---
 __start_ms() { __t=$(date +%s%3N); }
@@ -175,6 +182,15 @@ if ! $SKIP_ROFI; then
         killall -USR1 rofi 2>/dev/null
     fi
     __end_ms "Rofi"
+fi
+
+# --- OpenCode ---
+if ! $SKIP_OPENCODE; then
+    __start_ms
+    eval SRC='$'"${MODE^^}_OPENCODE_THEME_SRC"
+    mkdir -p "$(dirname "$OPENCODE_THEME_FILE")"
+    ln -sf "$SRC" "$OPENCODE_THEME_FILE"
+    __end_ms "OpenCode"
 fi
 
 printf "  %-18s %s\n" "Mode" "$MODE"
