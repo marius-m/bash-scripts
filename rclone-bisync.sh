@@ -1,9 +1,19 @@
 #!/bin/bash
 
+LOG_FILE="$HOME/rclone.log"
+
 log_msg() {
     local priority="$1"
     local message="$2"
-    logger -t rclone-bisync -p "daemon.$priority" "$message"
+
+    case "$(uname -s)" in
+        Darwin)
+            echo "$(date '+%Y-%m-%d %H:%M:%S') [$priority] $message" >> "$LOG_FILE"
+            ;;
+        *)
+            logger -t rclone-bisync -p "daemon.$priority" "$message"
+            ;;
+    esac
 }
 
 # Prevent overlapping runs if a previous sync is still running
@@ -62,18 +72,39 @@ notify() {
 
 RCLONE_BIN="$(get_rclone_bin)"
 
+case "$(uname -s)" in
+    Darwin)
+        LOG_ARGS=(
+            --log-file "$LOG_FILE"
+            --log-file-max-size 10M
+            --log-file-max-age 168h
+            --log-file-max-backups 3
+            --log-file-compress
+        )
+        ;;
+    *)
+        LOG_ARGS=(--syslog --syslog-facility DAEMON)
+        ;;
+esac
+
 "$RCLONE_BIN" bisync \
     gdrive: \
     "$HOME/GoogleDrive" \
     --exclude-from ~/scripts/rclone-exclude.txt \
     --verbose \
-    --syslog \
-    --syslog-facility DAEMON \
+    "${LOG_ARGS[@]}" \
     "$@"
 EXIT_CODE=$?
 
 if [ "$EXIT_CODE" -ne 0 ]; then
-    notify "rclone bisync" "Sync failed (exit $EXIT_CODE). Check: journalctl -t rclone -t rclone-bisync" 1
+    case "$(uname -s)" in
+        Darwin)
+            notify "rclone bisync" "Sync failed (exit $EXIT_CODE). Check: $LOG_FILE" 1
+            ;;
+        *)
+            notify "rclone bisync" "Sync failed (exit $EXIT_CODE). Check: journalctl -t rclone -t rclone-bisync" 1
+            ;;
+    esac
 else
     notify "rclone bisync" "Sync completed successfully." 0
 fi
